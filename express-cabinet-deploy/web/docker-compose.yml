@@ -41,6 +41,9 @@ services:
     networks:
       - cabinet-net
 
+#networks:
+#  cabinet-net:
+#    driver: bridge
 networks:
   cabinet-net:
-    driver: bridge
+    name: cabinet-net

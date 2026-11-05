@@ -1,4 +1,4 @@
-# 第一阶段：Maven编译打包（替换为官方可用镜像）
+# 第一阶段：Maven编译打包
 FROM maven:3.9.11-eclipse-temurin-17 AS builder
 WORKDIR /app
 COPY pom.xml .
@@ -7,7 +7,7 @@ COPY src ./src
 RUN sed -i 's|<mirrors>|<mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><url>https://maven.aliyun.com/repository/public</url></mirror>|g' /usr/share/maven/conf/settings.xml
 RUN mvn clean package -DskipTests
 
-# 第二阶段：运行镜像（同样替换废弃openjdk镜像）
+# 第二阶段：运行镜像
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
 # 复制编译产物

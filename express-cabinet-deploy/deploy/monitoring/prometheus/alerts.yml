@@ -1,0 +1,29 @@
+groups:
+  - name: cabinet-web
+    rules:
+      - alert: ApiProbeDown
+        expr: probe_success{job="black-http"} == 0
+        dor: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "冷藏柜 web 入口探活失败"
+          description: "blackbox 对 {{ $labels.instance }} 连续 30s 探测失败"
+
+      - alert: NginxTargetDown
+        expr: up{job="nginx"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "nginx exporter 无法采集"
+          description: "Prometheus 无法从 {{ $labels.instance }} 抓取 stub_status 指标"
+
+      - alert: CabinetTemperatureHigh
+        expr: cabinet_temperature_cesius{drawer="1"} > 8
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "冷藏柜抽屉温度超过阈值"
+          description: "抽屉 {{ $labels.drawer }} 当前温度 {{ $value }}℃，高于 8℃ 已持续 30s。"
