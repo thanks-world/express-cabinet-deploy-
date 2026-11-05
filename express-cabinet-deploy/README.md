@@ -47,7 +47,7 @@ text
 express-cabinet-deploy/
 ├── cabinet/
 |   ├── src/                         # 软件 A / B Java 源码
-|   ├── web/                         # Web 端与 Nginx 配置
+|   └── web/                         # Web 端与 Nginx 配置
 ├── deploy/
 │   ├── monitoring/              # Prometheus / Alertmanager / exporter
 │   │   ├── docker-compose.yml
