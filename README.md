@@ -60,8 +60,4 @@ cd /root/express-cabinet-deploy
 java -cp "target/classes:target/lib/*" SoftwareB --headless
 (如果你在本地 Windows/Mac 上，去掉 --headless 参数即可启动图形界面)
 
-4. 启动监控栈
-bash
-cd deploy/monitoring
-docker compose up -d
-启动后访问：http://<服务器IP>:9090 查看 Prometheus Targets 和告警状态。
+
