@@ -45,8 +45,9 @@ Ansible
 4. 目录结构
 text
 express-cabinet-deploy/
-├── src/                         # 软件 A / B Java 源码
-├── web/                         # Web 端与 Nginx 配置
+├── cabinet/
+|   ├── src/                         # 软件 A / B Java 源码
+|   ├── web/                         # Web 端与 Nginx 配置
 ├── deploy/
 │   ├── monitoring/              # Prometheus / Alertmanager / exporter
 │   │   ├── docker-compose.yml
