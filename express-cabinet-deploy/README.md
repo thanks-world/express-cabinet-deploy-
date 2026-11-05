@@ -1,5 +1,3 @@
-1. README.md
-markdown
 # express-cabinet-deploy
 
 基于 Modbus TCP 的冷藏柜/快递柜远程监控课设项目，包含软件 A（服务端）、软件 B（客户端）、Nginx Web 入口，以及本人独立扩展的 Prometheus + Alertmanager 监控栈与 Ansible 部署。
