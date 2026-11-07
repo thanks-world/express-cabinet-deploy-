@@ -1,63 +1,63 @@
-# Express Cabinet Monitoring System (快递柜温度监控系统)
+# 冷藏柜远程监控与自动化运维系统 (Express Cabinet Deploy)
 
-本项目是一个基于 Java 开发的工业级快递柜模拟终端与监控系统。项目核心使用 Modbus TCP 协议模拟本地硬件通信（温度、压缩机、抽屉状态），并集成 Prometheus + Alertmanager 构建了完整的可观测性告警体系。同时提供 Ansible 实现一键自动化部署。
+## 📖 项目简介
 
-## 🚀 核心功能
+本项目是一个面向冷藏柜/快递柜场景的**全栈微服务系统**。项目不仅实现了从底层 Modbus TCP 通信、Web 端实时监控，更独立完成了一套**生产级容器化部署与可观测性闭环方案**。
 
-- **核心业务 (Java)**：
-  - 基于 Modbus TCP 模拟快递柜底层通信（监听 `5020` 端口）。
-  - 模拟 10 个抽屉的独立温控、开关状态与密码鉴权。
-  - 内置轻量级 HTTP API 服务（监听 `8090` 端口），提供 JSON 格式的业务数据。
-  - **双模式运行**：支持本地带图形界面（GUI）运行，也支持 Linux 服务器无头终端（Headless）运行。
-- **可观测性 (Prometheus)**：
-  - 使用 Prometheus 抓取业务指标与 Nginx 状态。
-  - 配置 Alertmanager 实现温度超限、服务宕机的邮件/Webhook 告警。
-- **自动化部署 (Ansible)**：
-  - 使用 Ansible 剧本实现监控栈的模板渲染与容器化一键拉起。
+项目通过 **Docker Compose** 管理底层容器，通过 **Ansible** 实现全套配置的**幂等渲染与自动化部署**，并最终使用 **Prometheus + Alertmanager** 实现了从基础设施到业务温度的端到端告警。
 
-## 🛠 技术栈
+---
 
-- **语言/通信**：Java 17, Modbus TCP, HTTP Server
-- **监控/告警**：Prometheus, Alertmanager, Blackbox Exporter
-- **自动化/容器**：Ansible, Docker, Docker Compose
-- **Web 服务**：Nginx, Redis (提供辅助 Web 端展示，非核心业务依赖)
+## 🏗️ 系统架构与功能拆解
 
-## 📂 项目结构
+项目包含三个独立且互联的技术栈，共享同一个外部网络 `cabinet-net`：
 
-```text
-.
-├── src/main/java/        # 核心业务代码 (SoftwareA, SoftwareB, ModbusServer)
-├── deploy/
-│   ├── monitoring/       # Prometheus / Alertmanager 监控栈配置
-│   └── ansible/          # Ansible 自动化部署剧本 (site.yml)
-├── web/                  # Nginx, Redis, Gateway 等辅助 Web 栈 (Docker Compose)
-├── docs/evidence/        # 验收截图与日志证据
-└── pom.xml               # Maven 构建文件
-💻 快速开始 (纯终端模式)
-1. 环境要求
-JDK 17+
+### 1. 业务栈 (Modbus Stack)
+- **Software A (服务端)**：启动 Modbus TCP 服务（端口 `5020`）和 HTTP API 服务。内置制冷逻辑与抽屉控制，负责向 Prometheus 暴露业务指标。
+- **Software B (客户端)**：通过环境变量 `MODBUS_HOST` 连接服务端，周期性拉取实时温度并在终端打印监控日志。
 
-Maven 3.9+
+### 2. Web 栈 (Web Stack)
+- **Gateway (网关)**：基于 Java 编写的 HTTP 网关，接收前端请求并转发至 Modbus 服务端。
+- **Nginx**：托管静态前端页面（包含 ECharts 温度曲线），并将 API 请求反向代理至 Gateway。
+- **Redis**：提供缓存支持。
 
-Docker & Docker Compose (用于监控栈)
+### 3. 监控栈 (Monitoring Stack)
+- **Prometheus**：核心时序数据库，通过 `scrape_interval` 拉取各类指标。
+- **Alertmanager**：接收 Prometheus 告警，并按路由规则处理。
+- **Exporters**：
+  - `node-exporter`：采集宿主机 CPU/内存/磁盘指标。
+  - `nginx-exporter`：采集 Nginx 的 `stub_status` 连通性指标。
+  - `blackbox-exporter`：对 HTTP 服务进行主动探活（黑盒测试）。
+  - `cabinet-exporter`：自定义 Python 服务，将冷藏柜业务温度转化为 Prometheus 指标（`cabinet_temperature_celsius`）。
 
-2. 编译项目
-在项目根目录下执行：
+---
 
-bash
-mvn clean package -DskipTests
-3. 运行核心业务 (无桌面环境)
-注意：服务器无图形界面时，必须加上 --headless 参数，否则会抛出 HeadlessException。
+## 💡 核心工程决策与取舍
 
-启动服务端 (SoftwareA)，保持终端不关闭：
+1. **多阶段构建镜像**：
+   使用 `maven:3.9-eclipse-temurin-17` 进行编译，将产物移交至 `jre-jammy` 运行，有效减小了业务容器体积，提升了启动速度与安全性。
 
-bash
-java -cp "target/classes:target/lib/*" SoftwareA --headless
-新开一个终端，启动客户端轮询监控 (SoftwareB)：
+2. **健康检查解决启动时序依赖**：
+   `Software B` 依赖 `Software A` 的 Modbus 服务，但容器启动不保证应用就绪。通过为 A 编写 `CMD-SHELL` 类型的 `healthcheck`（探测 `/dev/tcp/127.0.0.1/5020`），并在 B 的 `depends_on` 中声明 `condition: service_healthy`，彻底消除了 `Connection refused` 的竞态问题。
 
-bash
-cd /root/express-cabinet-deploy
-java -cp "target/classes:target/lib/*" SoftwareB --headless
-(如果你在本地 Windows/Mac 上，去掉 --headless 参数即可启动图形界面)
+3. **配置与代码解耦**：
+   客户端代码中的连接地址不再硬编码为 `127.0.0.1`，而是通过 `System.getenv()` 读取 `MODBUS_HOST`。使得同一份镜像可以无缝适配单机运行与容器网络通信。
 
+4. **Ansible 幂等部署与变更重载**：
+   不使用 Ansible 去构建镜像（避免破坏宿主机环境依赖），Ansible 仅负责**渲染配置**与**编排容器**。通过 `register` 记录模板变化，结合 `when: prom_cfg.changed` 触发特定容器的重启，实现了“无变更不重建”的严格幂等。
 
+---
+
+## 🚀 快速开始 (一键部署)
+
+### 前提条件
+- 宿主机已安装 Docker, Docker Compose (V2) 与 Ansible。
+- 位于项目根目录 `/root/express-cabinet-deploy`。
+
+### 执行部署
+```bash
+# 进入 Ansible 目录
+cd deploy/ansible
+
+# 执行 Playbook
+ansible-playbook site.yml | tee ../../docs/evidence/ansible-run.log
