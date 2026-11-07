@@ -1,4 +1,5 @@
-'''快速开始
+'''
+# 快速开始
 # 进入 Ansible 目录
 cd deploy/ansible
 
