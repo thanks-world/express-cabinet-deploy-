@@ -13,7 +13,7 @@ ansible-playbook site.yml | tee ../../docs/evidence/ansible-run.log
 
 本项目是一个基于 Modbus TCP 的冷藏柜/快递柜远程监控课程设计项目。系统不仅包含底层 Modbus 通信与 Web 端实时展示，更独立扩展了一套**基于 Ansible 的自动化部署方案**与**Prometheus + Alertmanager 的可观测性闭环体系**。
 
-> **说明**：本项目为两人协作课程设计。本人独立负责 Web 端全部设计开发、Nginx 部署，并独立完成了整套微服务容器化规划、Ansible 编排与监控告警体系搭建。监控扩展属于超出课设原始要求的“可观测性补强”。
+> **说明**：本项目为两人协作课程设计。本人独立负责 Web 端全部设计开发、Nginx 部署，并独立完成了整套微服务容器化规划、Ansible 编排与监控告警体系搭建。
 
 ## 1. 系统架构概览
 
