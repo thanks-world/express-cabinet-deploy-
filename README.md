@@ -1,11 +1,13 @@
-'''
+```
+
 # 快速开始
 # 进入 Ansible 目录
 cd deploy/ansible
 
 # 执行 Playbook
 ansible-playbook site.yml | tee ../../docs/evidence/ansible-run.log
-'''
+
+```
 
 # 冷藏柜远程监控与自动化运维系统 (Express Cabinet Deploy)
 
