@@ -1,0 +1,35 @@
+---
+monitoring_dir: "{{ playbook_dir }}/../monitoring"
+nginx_conf_src: "{{ playbook_dir }}/../../web/nginx/default.conf"
+web_root_src: "{{ playbook_dir }}/../../web/frontend"
+
+monitoring_network: cabinet-net
+nginx_host_port: 80
+nginx_container: cabinet-nginx
+
+prometheus_port: 9090
+alertmanager_port: 9093
+node_exporter_port: 9100
+nginx_exporter_port: 9113
+blackbox_port: 9115
+cabinet_exporter_port: 9101
+
+prometheus_image: prom/prometheus:v2.51.0
+alertmanager_image: prom/alertmanager:v0.27.0
+node_exporter_image: prom/node-exporter:v1.8.0
+nginx_exporter_image: nginx/nginx-prometheus-exporter:1.5.1
+blackbox_image: prom/blackbox-exporter:v0.25.0
+
+scrape_interval: 15s
+evaluation_interval: 15s
+
+temperature_high_threshold: 8
+alert_for_duration: 30s
+
+web_dir: "{{ playbook_dir }}/../../web"
+modbus_dir: "{{ playbook_dir }}/../modbus"
+cabinet_dir: "{{ playbook_dir }}/../../cabinet"
+gateway_port: 8080
+nginx_port: 80
+modbus_port: 5020
+app_image: express-cabinet-app:latest

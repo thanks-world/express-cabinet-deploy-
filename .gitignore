@@ -1,0 +1,20 @@
+# Java / Maven
+cabinet/target/
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Redis 运行数据
+web/redis/data/
+
+# 本地备份与临时文件
+*.bak
+*.log
+test-command.txt
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store

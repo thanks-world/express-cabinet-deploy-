@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快递柜远程监控系统</title>
+    <script src="echarts.min.js"></script>
+    <script src="forge.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        .container { display: flex; gap: 20px; max-width: 1600px; margin: 0 auto; height: calc(100vh - 40px); }
+        .control-panel { width: 320px; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .panel-title { font-size: 18px; font-weight: bold; color: #333; border-bottom: 2px solid #1890ff; padding-bottom: 8px; }
+        .status-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+        .status-label { color: #666; }
+        .status-value { font-weight: bold; }
+        .status-online { color: #52c41a; }
+        .status-offline { color: #ff4d4f; }
+        .temp-current { font-size: 28px; color: #ff4d4f; font-weight: bold; text-align: center; padding: 10px 0; }
+        .alarm-bar { padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; margin-bottom: 10px; background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .alarm-bar.warning { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.6; } }
+        .input-group { display: flex; gap: 8px; margin-top: 8px; }
+        .input-group input { flex: 1; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.3s; }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #333; }
+        .btn-default:hover { border-color: #1890ff; color: #1890ff; }
+        .btn-danger { background: #ff4d4f; color: #fff; }
+        .btn-danger:hover { background: #ff7875; }
+        .drawer-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+        .drawer-btn { padding: 10px 0; border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; cursor: pointer; transition: all 0.3s; font-size: 13px; text-align: center; user-select: none; }
+        .drawer-btn:hover { border-color: #1890ff; }
+        .drawer-btn.open { background: #52c41a; color: #fff; border-color: #52c41a; }
+        .drawer-btn.locked { border-color: #faad14; background: #fffbe6; }
+        .drawer-temp { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+        .drawer-actions { display: flex; justify-content: center; gap: 4px; margin-top: 4px; font-size: 11px; flex-wrap: wrap; }
+        .drawer-actions span { padding: 2px 5px; background: #f0f0f0; border-radius: 3px; color: #666; cursor: pointer; }
+        .drawer-actions span:hover { background: #e6f7ff; color: #1890ff; }
+        .chart-panel { flex: 1; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        #tempChart { flex: 1; width: 100%; }
+        .alarm-panel { width: 320px; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; }
+        .threshold-setting { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .threshold-setting input { width: 80px; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; }
+        .alarm-list { flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 4px; padding: 10px; background: #fafafa; }
+        .alarm-item { padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 13px; border-left: 3px solid #1890ff; background: #fff; }
+        .alarm-item.high { border-left-color: #ff4d4f; background: #fff2f0; }
+        .alarm-item.low { border-left-color: #faad14; background: #fffbe6; }
+        .alarm-item.normal { border-left-color: #52c41a; background: #f6ffed; }
+        .alarm-time { font-size: 12px; color: #999; margin-bottom: 4px; }
+        .modal-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: #fff; padding: 24px; border-radius: 8px; width: 360px; }
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; }
+        .modal-form-item { margin-bottom: 12px; }
+        .modal-form-item label { display: block; margin-bottom: 6px; color: #666; font-size: 13px; }
+        .modal-form-item input, .modal-form-item select { width: 100%; padding: 8px; border: 1px solid #d9d9d9; border-radius: 4px; }
+        .modal-footer { margin-top: 20px; text-align: right; display: flex; gap: 8px; justify-content: flex-end; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="control-panel">
+        <div class="panel-title">系统状态</div>
+        <div id="alarmBar" class="alarm-bar">温度正常</div>
+        <div class="status-item"><span class="status-label">连接状态</span><span id="connStatus" class="status-value status-offline">未连接</span></div>
+        <div class="status-item"><span class="status-label">控制模式</span><span id="modeStatus" class="status-value">自动控温</span></div>
+        <div class="status-item"><span class="status-label">压缩机状态</span><span id="compressorStatus" class="status-value">关闭</span></div>
+        <div class="panel-title">温度监控</div>
+        <div class="temp-current" id="currentTemp">-- ℃</div>
+        <div class="status-item"><span class="status-label">全局设定温度</span><span id="setTempShow" class="status-value">-- ℃</span></div>
+        <div class="input-group"><input type="number" id="setTempInput" placeholder="输入设定温度" step="0.1"><button class="btn btn-primary" onclick="setGlobalTemp()">下发设定</button></div>
+        <button class="btn btn-default" style="width:100%;margin-top:8px" onclick="toggleMode()" id="modeBtn">切换为手动模式</button>
+        <div class="panel-title">抽屉控制</div>
+        <div class="drawer-grid" id="drawerGrid"></div>
+    </div>
+    <div class="chart-panel"><div class="panel-title">全局实时温度曲线</div><div id="tempChart"></div></div>
+    <div class="alarm-panel">
+        <div class="panel-title">告警管理</div>
+        <div>
+            <div style="margin-bottom:8px;color:#666">告警阈值设置</div>
+            <div class="threshold-setting"><span>高温</span><input type="number" id="highThreshold" value="20" step="0.5"><span>℃</span></div>
+            <div class="threshold-setting" style="margin-top:8px"><span>低温</span><input type="number" id="lowThreshold" value="0" step="0.5"><span>℃</span></div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+                <button class="btn btn-primary" style="flex:1" onclick="saveThreshold()">保存阈值</button>
+                <button class="btn btn-danger" style="flex:1" onclick="clearAlarm()">清空记录</button>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#666">告警历史记录</span><span id="alarmCount" style="font-size:12px;color:#999">0 条</span></div>
+        <div class="alarm-list" id="alarmList"><div style="text-align:center;color:#999;padding:20px 0">暂无告警记录</div></div>
+    </div>
+</div>
+
+<div class="modal-mask" id="unlockModal">
+    <div class="modal-box">
+        <div class="modal-title" id="unlockTitle">解锁抽屉</div>
+        <div class="modal-form-item"><label>请输入抽屉密码</label><input type="password" id="unlockPwd" placeholder="请输入密码"></div>
+        <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('unlockModal')">取消</button><button class="btn btn-primary" onclick="confirmUnlock()">确定解锁</button></div>
+    </div>
+</div>
+<div class="modal-mask" id="setPwdModal">
+    <div class="modal-box">
+        <div class="modal-title" id="setPwdTitle">设置抽屉密码</div>
+        <div class="modal-form-item"><label>设置密码</label><input type="password" id="setPwdInput" placeholder="请输入密码"></div>
+        <div class="modal-form-item"><label>确认密码</label><input type="password" id="confirmPwdInput" placeholder="请再次输入密码"></div>
+        <div class="modal-form-item"><label>有效期（1~7天）</label><select id="pwdDays"><option value="1">1天</option><option value="2">2天</option><option value="3">3天</option><option value="5">5天</option><option value="7" selected>7天</option></select></div>
+        <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('setPwdModal')">取消</button><button class="btn btn-primary" onclick="confirmSetPassword()">确定设置</button></div>
+    </div>
+</div>
+<div class="modal-mask" id="setTempModal">
+    <div class="modal-box">
+        <div class="modal-title" id="setTempTitle">设置抽屉温度</div>
+        <div class="modal-form-item"><label>设定温度（℃）</label><input type="number" id="drawerTempInput" placeholder="输入温度值，输入0恢复默认" step="0.5"></div>
+        <div class="modal-form-item" id="tempPwdItem" style="display:none"><label>请输入抽屉密码</label><input type="password" id="drawerTempPwd" placeholder="已锁定抽屉需验证密码"></div>
+        <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('setTempModal')">取消</button><button class="btn btn-primary" onclick="confirmSetDrawerTemp()">确定设置</button></div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8090/api';
+    let timeCounter = 0, tempData = [], timeLabels = [], chart;
+    let autoMode = true;
+    let drawerStates = new Array(10).fill(false);
+    let drawerLockStatus = new Array(10).fill(false);
+    let drawerTemps = [];
+    let currentDrawerId = 0;
+    let forgePublicKey = null;
+
+    function initChart() {
+        chart = echarts.init(document.getElementById('tempChart'));
+        chart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', name: '时间 (秒)', data: timeLabels },
+            yAxis: { type: 'value', name: '温度 (℃)', min: -10, max: 40 },
+            series: [{
+                name: '实时温度', type: 'line', smooth: true, data: tempData,
+                lineStyle: { color: '#ff4d4f', width: 2 },
+                areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: 'rgba(255,77,79,0.3)' },
+                    { offset: 1, color: 'rgba(255,77,79,0.05)' }
+                ])}
+            }]
+        });
+        window.addEventListener('resize', () => chart.resize());
+    }
+
+    function initDrawers() {
+        const grid = document.getElementById('drawerGrid');
+        for (let i = 0; i < 10; i++) {
+            const div = document.createElement('div');
+            div.className = 'drawer-btn';
+            div.innerHTML = `
+                <div>抽屉 ${i + 1} <span class="lock-icon"></span></div>
+                <div class="drawer-temp">-- ℃</div>
+                <div class="drawer-actions">
+                    <span onclick="event.stopPropagation(); openSetTemp(${i+1})">设置温度</span>
+                    <span onclick="event.stopPropagation(); openSetPwd(${i+1})">设置密码</span>
+                </div>
+            `;
+            div.onclick = () => toggleDrawer(i);
+            grid.appendChild(div);
+        }
+    }
+
+    async function loadPublicKey() {
+        try {
+            const res = await fetch(`${API_BASE}/drawers/publickey`).then(r => r.json());
+            if (!res || !res.publicKey) { alert('服务器未返回公钥'); return; }
+            const cleanKey = res.publicKey.replace(/[\s\r\n]+/g, '');
+            const lines = cleanKey.match(/.{1,64}/g);
+            const formattedKey = lines ? lines.join('\n') : cleanKey;
+            const pemKey = `-----BEGIN PUBLIC KEY-----\n${formattedKey}\n-----END PUBLIC KEY-----`;
+            forgePublicKey = forge.pki.publicKeyFromPem(pemKey);
+            const test = forgePublicKey.encrypt('123456', 'RSAES-PKCS1-V1_5');
+            if (!forge.util.encode64(test)) throw new Error('加密测试失败');
+            console.log('公钥加载成功');
+        } catch (e) {
+            console.error('公钥加载失败:', e);
+            alert('公钥加载失败，请刷新重试');
+            forgePublicKey = null;
+        }
+    }
+
+    function encryptData(text) {
+        if (!forgePublicKey) return null;
+        return forge.util.encode64(forgePublicKey.encrypt(text, 'RSAES-PKCS1-V1_5'));
+    }
+
+    async function fetchAllData() {
+        try {
+            const [status, drawers, lockStatus, drawerTemp] = await Promise.all([
+                fetch(`${API_BASE}/temp`).then(r => r.json()),
+                fetch(`${API_BASE}/drawers`).then(r => r.json()),
+                fetch(`${API_BASE}/drawers/lockstatus`).then(r => r.json()),
+                fetch(`${API_BASE}/drawers/temp`).then(r => r.json())
+            ]);
+            if (status) {
+                document.getElementById('connStatus').textContent = '已连接';
+                document.getElementById('connStatus').className = 'status-value status-online';
+                document.getElementById('currentTemp').textContent = status.currentTemp.toFixed(1) + ' ℃';
+                document.getElementById('setTempShow').textContent = status.setTemp.toFixed(1) + ' ℃';
+                document.getElementById('compressorStatus').textContent = status.compressorOn ? '开启 (制冷中)' : '关闭 (回温中)';
+                autoMode = status.autoMode;
+                updateModeUI();
+                updateAlarmBar(status.currentTemp);
+                timeCounter += 3; timeLabels.push(timeCounter); tempData.push(status.currentTemp);
+                if (timeLabels.length > 60) { timeLabels.shift(); tempData.shift(); }
+                chart.setOption({ xAxis: { data: timeLabels }, series: [{ data: tempData }] });
+            }
+            if (drawers) drawerStates = drawers.states;
+            if (lockStatus && lockStatus.drawers) drawerLockStatus = lockStatus.drawers.map(d => d.locked);
+            if (drawerTemp && drawerTemp.drawers) { drawerTemps = drawerTemp.drawers; updateDrawerTempUI(); }
+            updateDrawerUI();
+            loadAlarmList();
+        } catch (e) {
+            document.getElementById('connStatus').textContent = '连接失败';
+            document.getElementById('connStatus').className = 'status-value status-offline';
+        }
+    }
+
+    function updateAlarmBar(temp) {
+        const high = parseFloat(document.getElementById('highThreshold').value);
+        const low = parseFloat(document.getElementById('lowThreshold').value);
+        const bar = document.getElementById('alarmBar');
+        if (temp >= high) { bar.textContent = `⚠️ 高温告警：${temp.toFixed(1)}℃`; bar.className = 'alarm-bar warning'; }
+        else if (temp <= low) { bar.textContent = `⚠️ 低温告警：${temp.toFixed(1)}℃`; bar.className = 'alarm-bar warning'; }
+        else { bar.textContent = `✓ 温度正常：${temp.toFixed(1)}℃`; bar.className = 'alarm-bar'; }
+    }
+
+    function updateDrawerUI() {
+        const btns = document.querySelectorAll('.drawer-btn');
+        btns.forEach((btn, i) => {
+            btn.classList.toggle('open', drawerStates[i]);
+            btn.classList.toggle('locked', drawerLockStatus[i]);
+            btn.querySelector('.lock-icon').textContent = drawerLockStatus[i] ? '🔒' : '';
+        });
+    }
+
+    function updateDrawerTempUI() {
+        const btns = document.querySelectorAll('.drawer-btn');
+        drawerTemps.forEach((item, i) => {
+            const tempEl = btns[i].querySelector('.drawer-temp');
+            let text = item.currentTemp.toFixed(1) + '℃';
+            if (item.setTemp !== undefined && item.setTemp !== 0) text += ` (设定: ${item.setTemp.toFixed(1)}℃)`;
+            else text += ' (默认)';
+            tempEl.textContent = text;
+        });
+    }
+
+    function updateModeUI() {
+        document.getElementById('modeStatus').textContent = autoMode ? '自动控温' : '手动控制';
+        document.getElementById('modeBtn').textContent = autoMode ? '切换为手动模式' : '切换为自动模式';
+    }
+
+    async function toggleDrawer(index) {
+        if (drawerLockStatus[index] && !drawerStates[index]) {
+            currentDrawerId = index + 1;
+            document.getElementById('unlockTitle').textContent = `解锁抽屉 ${index + 1}`;
+            document.getElementById('unlockPwd').value = '';
+            document.getElementById('unlockModal').style.display = 'flex';
+            return;
+        }
+        const newState = !drawerStates[index];
+        const res = await fetch(`${API_BASE}/drawers/${index + 1}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ open: newState })
+        }).then(r => r.json());
+        if (res && res.success) { drawerStates[index] = newState; updateDrawerUI(); }
+    }
+
+    async function confirmUnlock() {
+        const pwd = document.getElementById('unlockPwd').value;
+        if (!pwd) return alert('请输入密码');
+        const encrypted = encryptData(pwd);
+        if (!encrypted) return;
+        const res = await fetch(`${API_BASE}/drawers/password/verify`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentDrawerId, encryptedPassword: encrypted })
+        }).then(r => r.json());
+        if (res && res.success) {
+            await fetch(`${API_BASE}/drawers/${currentDrawerId}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ open: true })
+            });
+            drawerStates[currentDrawerId - 1] = true;
+            updateDrawerUI();
+            closeModal('unlockModal');
+        } else alert('密码错误');
+    }
+
+    function openSetTemp(id) {
+        currentDrawerId = id;
+        document.getElementById('setTempTitle').textContent = `设置抽屉 ${id} 温度`;
+        const item = drawerTemps[id - 1];
+        document.getElementById('drawerTempInput').value = item ? (item.setTemp || '0') : '0';
+        if (drawerLockStatus[id - 1]) {
+            document.getElementById('tempPwdItem').style.display = 'block';
+            document.getElementById('drawerTempPwd').value = '';
+        } else {
+            document.getElementById('tempPwdItem').style.display = 'none';
+        }
+        document.getElementById('setTempModal').style.display = 'flex';
+    }
+
+    async function confirmSetDrawerTemp() {
+        const temp = parseFloat(document.getElementById('drawerTempInput').value);
+        if (isNaN(temp)) return alert('温度格式错误');
+        let encryptedPwd = null;
+        if (drawerLockStatus[currentDrawerId - 1]) {
+            const pwd = document.getElementById('drawerTempPwd').value;
+            if (!pwd) return alert('抽屉已锁定，需要密码');
+            encryptedPwd = encryptData(pwd);
+            if (!encryptedPwd) return;
+        }
+        const res = await fetch(`${API_BASE}/drawers/temp/set`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentDrawerId, temp, encryptedPassword: encryptedPwd })
+        }).then(r => r.json());
+        if (res && res.success) { alert('设置成功'); closeModal('setTempModal'); }
+        else alert('设置失败：' + (res?.message || '密码错误或权限不足'));
+    }
+
+    function openSetPwd(id) {
+        currentDrawerId = id;
+        document.getElementById('setPwdTitle').textContent = `设置抽屉 ${id} 密码`;
+        document.getElementById('setPwdInput').value = '';
+        document.getElementById('confirmPwdInput').value = '';
+        document.getElementById('setPwdModal').style.display = 'flex';
+    }
+
+    async function confirmSetPassword() {
+        const pwd = document.getElementById('setPwdInput').value;
+        const confirm = document.getElementById('confirmPwdInput').value;
+        if (!pwd || pwd !== confirm) return alert('两次密码不一致');
+        const days = parseInt(document.getElementById('pwdDays').value);
+        const encrypted = encryptData(pwd);
+        if (!encrypted) return;
+        const res = await fetch(`${API_BASE}/drawers/password/set`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentDrawerId, encryptedPassword: encrypted, days })
+        }).then(r => r.json());
+        if (res && res.success) alert('密码设置成功');
+        else alert('设置失败');
+    }
+
+    async function setGlobalTemp() {
+        const temp = parseFloat(document.getElementById('setTempInput').value);
+        if (isNaN(temp)) return alert('格式错误');
+        const res = await fetch(`${API_BASE}/temp/set`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ temp })
+        }).then(r => r.json());
+        if (res && res.success) alert('设定温度下发成功');
+    }
+
+    async function toggleMode() {
+        const res = await fetch(`${API_BASE}/mode/toggle`, { method: 'POST' }).then(r => r.json());
+        if (res && res.success) { autoMode = res.autoMode; updateModeUI(); }
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function saveThreshold() {
+        const high = parseFloat(document.getElementById('highThreshold').value);
+        const low = parseFloat(document.getElementById('lowThreshold').value);
+        if (high <= low) return alert('高温必须大于低温');
+        localStorage.setItem('highThreshold', high);
+        localStorage.setItem('lowThreshold', low);
+        alert('阈值已保存');
+    }
+
+    async function clearAlarm() {
+        if (confirm('确定清空所有告警记录？')) {
+            await fetch(`${API_BASE}/alarms/clear`, { method: 'POST' });
+            loadAlarmList();
+        }
+    }
+
+    async function loadAlarmList() {
+        const res = await fetch(`${API_BASE}/alarms`).then(r => r.json());
+        const container = document.getElementById('alarmList');
+        const countEl = document.getElementById('alarmCount');
+        if (res && res.alarms && res.alarms.length > 0) {
+            container.innerHTML = res.alarms.map(a => {
+                let cls = 'normal';
+                if (a.type === 'high') cls = 'high';
+                else if (a.type === 'low') cls = 'low';
+                return `<div class="alarm-item ${cls}"><div class="alarm-time">${a.time}</div><div>${a.message}</div></div>`;
+            }).join('');
+            countEl.textContent = res.alarms.length + ' 条';
+        } else {
+            container.innerHTML = '<div style="text-align:center;color:#999;padding:20px 0">暂无告警记录</div>';
+            countEl.textContent = '0 条';
+        }
+    }
+
+    ['unlockModal','setPwdModal','setTempModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) closeModal(id); });
+    });
+
+    window.onload = function() {
+        initChart();
+        initDrawers();
+        const high = localStorage.getItem('highThreshold');
+        const low = localStorage.getItem('lowThreshold');
+        if (high) document.getElementById('highThreshold').value = high;
+        if (low) document.getElementById('lowThreshold').value = low;
+        loadPublicKey().then(() => {
+            fetchAllData();
+            setInterval(fetchAllData, 3000);
+        });
+    };
+</script>
+</body>
+</html>
