@@ -22,7 +22,8 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - MODBUS_HOST=192.168.10.1
+      #- MODBUS_HOST=192.168.10.1
+      - MODBUS_HOST=cabinet-software-a
       - MODBUS_PORT=5020
     networks:
       - cabinet-net
@@ -41,6 +42,10 @@ services:
     networks:
       - cabinet-net
 
+#networks:
+#  cabinet-net:
+#    driver: bridge
 networks:
   cabinet-net:
-    driver: bridge
+    external: true
+    name: cabinet-net

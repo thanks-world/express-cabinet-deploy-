@@ -1,0 +1,251 @@
+---
+- name: 部署冷藏柜监控站
+  hosts: monitoring_hosts
+  gather_facts: true
+
+  tasks:
+    - name: 检查 docker CLI
+      command: docker --version
+      changed_when: false
+      register: docker_version
+
+    - name: 检查 docker compose 插件
+      command: docker compose version
+      changed_when: false
+      register: compose_version
+
+    - name: 校验文件存在
+      stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ monitoring_dir }}/exporter/cabinet_exporter.py"
+        - "{{ monitoring_dir }}/exporter/Dockerfile"
+        - "{{ monitoring_dir }}/blackbox/blackbox.yml"
+        - "{{ nginx_conf_src }}"
+      register: required_files
+
+    - name: 业务文件缺失时失败
+      assert:
+        that:
+          - item.stat.exists
+        fail_msg: "缺少文件: {{ item.item }}"
+      loop: "{{ required_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: 确认监控网络存在
+      community.docker.docker_network:
+        name: "{{ monitoring_network }}"
+        state: present
+
+    - name: 检查nginx是否已在监控网络
+      command: docker network inspect {{ monitoring_network }} -f '{{ '{{' }}range .Containers{{ '}}' }}{{ '{{' }}.Name{{ '}}' }} {{ '{{' }}end{{ '}}' }}'
+      register: net_containers
+      changed_when: false
+      failed_when: false
+
+    - name: 将 nginx 接入监控网络
+      #command: docker network connect {{ monitoring_network }} -f '{{ '{{' }}range .Containers{{ '}}' }}{{ '{{' }}.Name{{ '}}' }} {{ '{{' }}end{{ '}}' }}'
+      command: docker network connect {{ monitoring_network }} {{ nginx_container }}
+      register: net_containers
+      changed_when: false
+      failed_when: false
+
+    - name: 创建监控配置目录
+      file:
+        path: "{{ monitoring_dir }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - prometheus
+        - alertmanager
+        - blackbox
+        - exporter
+        - scripts
+
+    - name: 渲染 Prometheus 配置
+      template:
+        src: templates/prometheus.yml.j2
+        dest: "{{ monitoring_dir }}/prometheus/prometheus.yml"
+        mode: "0644"
+      #notify: 重启 Prometheus
+      register: prom_cfg
+
+    - name: 渲染告警规则
+      template:
+        src: templates/alerts.yml.j2
+        dest: "{{ monitoring_dir }}/prometheus/alerts.yml"
+        mode: "0644"
+      #notify: 重启 Prometheus
+      register: prom_rules
+
+    - name: 渲染Alertmanager 配置
+      template:
+        src: templates/alertmanager.yml.j2
+        dest: "{{ monitoring_dir }}/alertmanager/alertmanager.yml"
+        mode: "0644"
+      #notify: 重启 alertmanager
+      register: am_cfg
+
+    - name: 渲染 docker-compose
+      template: 
+        src: templates/docker-compose.yml.j2
+        dest: "{{ monitoring_dir }}/docker-compose.yml"
+        mode: "0644"
+      register: compose_cfg
+      notify: 重建 compose 栈
+
+    - name: 启动监控站
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        state: present
+        #build: always
+        build: policy
+        recreate: auto
+
+    - name: 配置变化时重启 Prometheus
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        services: [prometheus]
+        state: restarted
+      when: prom_cfg.changed or prom_rules.changed
+
+    - name: 配置变化时重启 Alertmanager
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        services: [alertmanager]
+        state: restarted
+      when: am_cfg.changed
+
+    - name: 等待 Prometheus ready
+      uri:
+        url: "http://localhost:{{ prometheus_port }}/-/ready"
+        status_code: 200
+      register: prom_ready
+      retries: 15
+      delay: 2
+      until: prom_ready.status == 200
+      when: not ansible_check_mode
+
+    - name: 等待 Alertmanager ready
+      uri:
+        url: "http://localhost:{{ alertmanager_port }}/-/ready"
+        status_code: 200
+      register: am_ready
+      retries: 15
+      delay: 2
+      #until: exporter_metrics.status == 200
+      until: am_ready.status == 200
+      when: not ansible_check_mode
+
+    - name: 等待 cabinet-exporter 指标可用
+      uri:
+        url: "http://localhost:{{ cabinet_exporter_port }}/metrics"
+        status_code: 200
+        return_content: true
+      register: exporter_metrics
+      retries: 15
+      delay: 2
+      until: exporter_metrics.status == 200
+      when: not ansible_check_mode
+
+    - name: 校验温度指标存在
+      assert:
+        that:
+          - "'cabinet_temperature_celsius' in exporter_metrics.content"
+        fail_msg: "cabinet-exporter 未暴露温度指标"
+      when: not ansible_check_mode
+
+    - name: 部署完成
+      debug:
+        msg:
+          - "Prometheus: http://localhost:{{ prometheus_port }}/targets"
+          - "Alertmanager http://localhost:{{ alertmanager_port }}"
+          - "温度模拟: curl -X POST 'http://localhost:{{ cabinet_exporter_port }}/simulate?temp=9'"
+
+    - name: 渲染 Nginx 配置
+      template:
+        src: templates/nginx-default.conf.j2
+        dest: "{{ web_dir }}/nginx/default.conf"
+        mode: "0644"
+      notify: 重载 nginx
+
+    - name: 渲染 Modbus 栈 compose
+      template:
+        src: templates/modbus-docker-compose.yml.j2
+        dest: "{{ modbus_dir }}/docker-compose.yml"
+        mode: "0644"
+      notify: 重建 modbus 栈
+
+    - name: 构建并启动 Modbus 栈
+      community.docker.docker_compose_v2:
+        project_src: "{{ modbus_dir }}"
+        state: present
+        build: policy
+        recreate: auto
+
+    - name: 等待 SoftwareA 健康
+      community.docker.docker_container_info:
+        name: cabinet-software-a
+      register: a_info
+      until: a_info.container.State.Health.Status == "healthy"
+      retries: 20
+      delay: 2
+      when: not ansible_check_mode
+
+    - name: 启动 Web 栈
+      community.docker.docker_compose_v2:
+        project_src: "{{ web_dir }}"
+        state: present
+        build: policy
+        recreate: auto
+
+    - name: 等待 gateway 健康检查
+      uri: 
+        url: "http://localhost:{{ gateway_port }}/healthz"
+        status_code: 200
+      register: gw_ready
+      retries: 15
+      delay: 2
+      until: gw_ready.status == 200
+      when: not ansible_check_mode
+
+    - name: 等待 nginx stub_status
+      uri:
+        url: "http://localhost:{{ nginx_port }}/stub_status"
+        status_code: 200
+      register: ngx_ready
+      retries: 15
+      delay: 2
+      until: ngx_ready.status == 200
+      when: not ansible_check_mode
+
+  handlers:
+    - name: 重启 Prometheus
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        services: [prometheus]
+        state: restarted
+
+    - name: 重启 alertmanager
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        services: [alertmanager]
+        state: restarted
+
+    - name: 重建 compose 栈
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        state: restarted
+
+    - name: 重载 nginx
+      community.docker.docker_compose_v2:
+        project_src: "{{ web_dir }}"
+        services: [nginx]
+        state: restarted
+
+    - name: 重建 modbus 栈
+      community.docker.docker_compose_v2:
+        project_src: "{{ modbus_dir }}"
+        state: restarted
+

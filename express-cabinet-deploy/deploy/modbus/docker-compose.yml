@@ -1,0 +1,36 @@
+services:
+  software-a:
+    image: express-cabinet-app:latest
+    build:
+      context: ../../cabinet
+      dockerfile: Dockerfile
+    container_name: cabinet-software-a
+    command: ["SoftwareA", "--headless"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/5020' || exit 1"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+    networks:
+      - cabinet-net
+
+  software-b:
+    image: express-cabinet-app:latest
+    container_name: cabinet-software-b
+    command: ["SoftwareB", "--headless"]
+    restart: unless-stopped
+    environment:
+      MODBUS_HOST: software-a
+      MODBUS_PORT: "5020"
+    depends_on:
+      software-a:
+        condition: service_healthy
+    networks:
+      - cabinet-net
+
+networks:
+  cabinet-net:
+    external: true
+    name: cabinet-net

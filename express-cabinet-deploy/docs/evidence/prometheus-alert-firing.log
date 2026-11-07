@@ -1,0 +1,1 @@
+{"status":"success","data":{"alerts":[{"labels":{"alertname":"CabinetTemperatureHigh","drawer":"1","instance":"cabinet-exporter:9101","job":"cabinet-exporter","severity":"warning"},"annotations":{"description":"抽屉 1 当前温度 9℃，高于 8℃ 已持续 30s。","summary":"冷藏柜抽屉温度超过阈值"},"state":"firing","activeAt":"2026-11-07T04:30:48.277184373Z","value":"9e+00"}]}}

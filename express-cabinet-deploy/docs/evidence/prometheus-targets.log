@@ -1,0 +1,20 @@
+{
+  "job": "blackbox-http",
+  "health": "up"
+}
+{
+  "job": "cabinet-exporter",
+  "health": "up"
+}
+{
+  "job": "nginx",
+  "health": "up"
+}
+{
+  "job": "node",
+  "health": "up"
+}
+{
+  "job": "prometheus",
+  "health": "up"
+}

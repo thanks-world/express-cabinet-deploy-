@@ -1,0 +1,373 @@
+
+PLAY [部署冷藏柜监控站] ********************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [检查 docker CLI] *********************************************************
+ok: [localhost]
+
+TASK [检查 docker compose 插件] ************************************************
+ok: [localhost]
+
+TASK [校验文件存在] ************************************************************
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/cabinet_exporter.py)
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/Dockerfile)
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../monitoring/blackbox/blackbox.yml)
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../../web/nginx/default.conf)
+
+TASK [业务文件缺失时失败] ******************************************************
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/cabinet_exporter.py) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/cabinet_exporter.py"
+            }
+        },
+        "item": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/cabinet_exporter.py",
+        "stat": {
+            "atime": 1794022763.7238514,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 8,
+            "charset": "utf-8",
+            "checksum": "49b71671b220b8c6759e89c15b298e81b3b1a17b",
+            "ctime": 1793887030.1518621,
+            "dev": 64768,
+            "device_type": 0,
+            "executable": false,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 134866839,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "text/x-script.python",
+            "mode": "0644",
+            "mtime": 1793887030.1508186,
+            "nlink": 1,
+            "path": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/cabinet_exporter.py",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 1213,
+            "uid": 0,
+            "version": "898216683",
+            "wgrp": false,
+            "woth": false,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": false,
+            "xoth": false,
+            "xusr": false
+        }
+    },
+    "msg": "All assertions passed"
+}
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/Dockerfile) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/Dockerfile"
+            }
+        },
+        "item": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/Dockerfile",
+        "stat": {
+            "atime": 1794022763.8598523,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 8,
+            "charset": "us-ascii",
+            "checksum": "941b195204b262ea2f00b1d2b2cedd69a859d532",
+            "ctime": 1793887072.1236856,
+            "dev": 64768,
+            "device_type": 0,
+            "executable": false,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 137284101,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "text/plain",
+            "mode": "0644",
+            "mtime": 1793887072.1229024,
+            "nlink": 1,
+            "path": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/exporter/Dockerfile",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 176,
+            "uid": 0,
+            "version": "3812480383",
+            "wgrp": false,
+            "woth": false,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": false,
+            "xoth": false,
+            "xusr": false
+        }
+    },
+    "msg": "All assertions passed"
+}
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../monitoring/blackbox/blackbox.yml) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/blackbox/blackbox.yml"
+            }
+        },
+        "item": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/blackbox/blackbox.yml",
+        "stat": {
+            "atime": 1794022763.9898534,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 8,
+            "charset": "us-ascii",
+            "checksum": "5177c85a5ac7e841ade7098e420fafc30680ba9a",
+            "ctime": 1793855913.2229707,
+            "dev": 64768,
+            "device_type": 0,
+            "executable": false,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 100824530,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "text/plain",
+            "mode": "0644",
+            "mtime": 1793855913.2229707,
+            "nlink": 1,
+            "path": "/root/express-cabinet-deploy/deploy/ansible/../monitoring/blackbox/blackbox.yml",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 131,
+            "uid": 0,
+            "version": "2943926413",
+            "wgrp": false,
+            "woth": false,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": false,
+            "xoth": false,
+            "xusr": false
+        }
+    },
+    "msg": "All assertions passed"
+}
+ok: [localhost] => (item=/root/express-cabinet-deploy/deploy/ansible/../../web/nginx/default.conf) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/root/express-cabinet-deploy/deploy/ansible/../../web/nginx/default.conf"
+            }
+        },
+        "item": "/root/express-cabinet-deploy/deploy/ansible/../../web/nginx/default.conf",
+        "stat": {
+            "atime": 1794022764.1158543,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 8,
+            "charset": "utf-8",
+            "checksum": "bb21cfb6380d737f6945a1452f98d0194ebb1f8a",
+            "ctime": 1793793291.9062037,
+            "dev": 64768,
+            "device_type": 0,
+            "executable": false,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 103382750,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "text/plain",
+            "mode": "0644",
+            "mtime": 1793793291.9048965,
+            "nlink": 1,
+            "path": "/root/express-cabinet-deploy/deploy/ansible/../../web/nginx/default.conf",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 768,
+            "uid": 0,
+            "version": "1570240950",
+            "wgrp": false,
+            "woth": false,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": false,
+            "xoth": false,
+            "xusr": false
+        }
+    },
+    "msg": "All assertions passed"
+}
+
+TASK [确认监控网络存在] ********************************************************
+ok: [localhost]
+
+TASK [检查nginx是否已在监控网络] ***********************************************
+ok: [localhost]
+
+TASK [将 nginx 接入监控网络] ***************************************************
+ok: [localhost]
+
+TASK [创建监控配置目录] ********************************************************
+ok: [localhost] => (item=prometheus)
+ok: [localhost] => (item=alertmanager)
+ok: [localhost] => (item=blackbox)
+ok: [localhost] => (item=exporter)
+ok: [localhost] => (item=scripts)
+
+TASK [渲染 Prometheus 配置] ****************************************************
+ok: [localhost]
+
+TASK [渲染告警规则] ************************************************************
+ok: [localhost]
+
+TASK [渲染Alertmanager 配置] ***************************************************
+ok: [localhost]
+
+TASK [渲染 docker-compose] *****************************************************
+ok: [localhost]
+
+TASK [启动监控站] **************************************************************
+changed: [localhost]
+
+TASK [配置变化时重启 Prometheus] ***********************************************
+skipping: [localhost]
+
+TASK [配置变化时重启 Alertmanager] *********************************************
+skipping: [localhost]
+
+TASK [等待 Prometheus ready] ***************************************************
+ok: [localhost]
+
+TASK [等待 Alertmanager ready] *************************************************
+ok: [localhost]
+
+TASK [等待 cabinet-exporter 指标可用] ******************************************
+ok: [localhost]
+
+TASK [校验温度指标存在] ********************************************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [部署完成] ****************************************************************
+ok: [localhost] => {
+    "msg": [
+        "Prometheus: http://localhost:9090/targets",
+        "Alertmanager http://localhost:9093",
+        "温度模拟: curl -X POST 'http://localhost:9101/simulate?temp=9'"
+    ]
+}
+
+TASK [渲染 Nginx 配置] *********************************************************
+ok: [localhost]
+
+TASK [渲染 Modbus 栈 compose] **************************************************
+ok: [localhost]
+
+TASK [构建并启动 Modbus 栈] ****************************************************
+changed: [localhost]
+
+TASK [等待 SoftwareA 健康] *****************************************************
+ok: [localhost]
+
+TASK [启动 Web 栈] *************************************************************
+changed: [localhost]
+
+TASK [等待 gateway 健康检查] ***************************************************
+ok: [localhost]
+
+TASK [等待 nginx stub_status] **************************************************
+ok: [localhost]
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=26   changed=3    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+

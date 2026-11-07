@@ -1,0 +1,12 @@
+NAMES                       STATUS                    PORTS
+cabinet-nginx               Up 12 minutes             0.0.0.0:80->80/tcp, [::]:80->80/tcp
+cabinet-gateway             Up 12 minutes             0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+cabinet-redis               Up 12 minutes             0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+cabinet-software-b          Up 12 minutes             5020/tcp
+cabinet-software-a          Up 12 minutes (healthy)   5020/tcp
+cabinet-prometheus          Up 12 minutes             0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
+cabinet-nginx-exporter      Up 12 minutes             0.0.0.0:9113->9113/tcp, [::]:9113->9113/tcp
+cabinet-exporter            Up 12 minutes             0.0.0.0:9101->9101/tcp, [::]:9101->9101/tcp
+cabinet-alertmanager        Up 12 minutes             0.0.0.0:9093->9093/tcp, [::]:9093->9093/tcp
+cabinet-blackbox-exporter   Up 12 minutes             0.0.0.0:9115->9115/tcp, [::]:9115->9115/tcp
+cabinet-node-exporter       Up 12 minutes             0.0.0.0:9100->9100/tcp, [::]:9100->9100/tcp

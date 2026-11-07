@@ -1,0 +1,30 @@
+[
+  {
+    "annotations": {
+      "description": "抽屉 1 当前温度 9℃，高于 8℃ 已持续 30s。",
+      "summary": "冷藏柜抽屉温度超过阈值"
+    },
+    "endsAt": "2026-11-07T04:36:33.277Z",
+    "fingerprint": "e54ea2cb9483e122",
+    "receivers": [
+      {
+        "name": "default"
+      }
+    ],
+    "startsAt": "2026-11-07T04:31:18.277Z",
+    "status": {
+      "inhibitedBy": [],
+      "silencedBy": [],
+      "state": "active"
+    },
+    "updatedAt": "2026-11-07T04:32:33.279Z",
+    "generatorURL": "http://65515351d68e:9090/graph?g0.expr=cabinet_temperature_celsius%7Bdrawer%3D%221%22%7D+%3E+8&g0.tab=1",
+    "labels": {
+      "alertname": "CabinetTemperatureHigh",
+      "drawer": "1",
+      "instance": "cabinet-exporter:9101",
+      "job": "cabinet-exporter",
+      "severity": "warning"
+    }
+  }
+]

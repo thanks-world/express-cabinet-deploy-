@@ -1,0 +1,16 @@
+SoftwareA$SetDrawerTempHandler.class
+ModbusServer.class
+SoftwareA$AlarmsClearHandler.class
+SoftwareA$SetPasswordHandler.class
+SoftwareA$VerifyPasswordHandler.class
+SoftwareA.class
+SoftwareA$DrawersHandler.class
+SoftwareA$PublicKeyHandler.class
+SoftwareA$AlarmsHandler.class
+SoftwareA$SetTempHandler.class
+SoftwareA$LockStatusHandler.class
+SoftwareB.class
+SoftwareA$ModeToggleHandler.class
+SoftwareA$BaseHandler.class
+SoftwareA$TempHandler.class
+SoftwareA$DrawerTempHandler.class

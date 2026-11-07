@@ -1,0 +1,19 @@
+# 1. 先单独构建 cabinet 镜像
+cd /root/express-cabinet-deploy/cabinet
+docker build -t express-cabinet-app:latest .
+
+# 2. 单独跑 Modbus 栈
+cd ../deploy/modbus
+docker compose up -d
+docker compose ps
+docker logs cabinet-software-b --tail 20   # 应能看到成功获取服务器公钥
+
+# 3. 重建 gateway 让 MODBUS_HOST 生效
+cd ../../web
+docker compose up -d --build gateway
+curl -i http://localhost:8080/healthz
+
+# 4. 最后跑整份 playbook
+cd ../deploy/ansible
+ansible-playbook site.yml | tee ../../docs/evidence/ansible-full-run1.log
+ansible-playbook site.yml | tee ../../docs/evidence/ansible-full-run2.log
