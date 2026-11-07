@@ -1,3 +1,9 @@
+# 进入 Ansible 目录
+cd deploy/ansible
+
+# 执行 Playbook
+ansible-playbook site.yml | tee ../../docs/evidence/ansible-run.log
+
 # 冷藏柜远程监控与自动化运维系统 (Express Cabinet Deploy)
 
 本项目是一个基于 Modbus TCP 的冷藏柜/快递柜远程监控课程设计项目。系统不仅包含底层 Modbus 通信与 Web 端实时展示，更独立扩展了一套**基于 Ansible 的自动化部署方案**与**Prometheus + Alertmanager 的可观测性闭环体系**。
